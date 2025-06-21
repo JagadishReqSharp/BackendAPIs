@@ -1,0 +1,5 @@
+config.py
+*.log
+*copy.*
+APIs/initial_setup_v2 copy 2.py
+APIs/utils WITH LOGGING.py
