@@ -1,4 +1,4 @@
-# main.py
+# main_prod.py
 from flask import Flask
 from flask_cors import CORS
 from account_and_project_v2 import account_and_project_blueprint
