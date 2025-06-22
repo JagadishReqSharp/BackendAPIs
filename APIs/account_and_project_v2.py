@@ -737,7 +737,7 @@ def update_project(current_user):
             'status_description': 'Functional domain is required'
         })
 
-    if not validate_functional_domain(functional_domain):
+    if not validate_functional_domain(corporate_account, functional_domain):
         return jsonify({
             'status': 'Failed',
             'status_description': 'Functional domain is not valid'
@@ -1655,6 +1655,8 @@ def validate_user_credentials():
 
         record = (user_id,'Active')
         cursor.execute(mySql_insert_query, record)
+        logging.info(f"User login - executed SQL is: {cursor._executed}")
+
         result = cursor.fetchone()
         if result is None:
             sts = "Failed"
@@ -2187,10 +2189,11 @@ def update_user_password(current_user):
                                   SET PASSWORD_HASH = %s, 
                                         PASSWORD_RESET_TOKEN = NULL, 
                                         PASSWORD_RESET_EXPIRES = NULL, 
-                                        LAST_PASSWORD_CHANGE = %s
+                                        LAST_PASSWORD_CHANGE = %s,
+                                        UPDATED_DATE = %s
                                   WHERE CORPORATE_ACCOUNT = %s 
                                     AND USER_ID IN({placeholders})"""
-            record = [password_hash, datetime.now(), corporate_account]
+            record = [password_hash, datetime.now() , datetime.now() , corporate_account]
             record.extend(user_ids)
 
             cursor.execute(mySql_update_query, record)

@@ -842,51 +842,57 @@ def get_user_api_access_level(user_id, corporate_account, project_id, api_name):
                                              database=config.database,
                                              user=config.user,
                                              password=config.password)
-        cursor = connection.cursor()
+        cursor1 = connection.cursor()
+
+        # First query - check USER_PROJECTS
         mySql_select_query = """SELECT ACCESS_LEVEL FROM USER_PROJECTS 
         WHERE USER_ID = %s AND CORPORATE_ACCOUNT = %s AND PROJECT_ID = %s"""
         record = (user_id, corporate_account, project_id)
 
-        cursor.execute(mySql_select_query, record)
-        result = cursor.fetchone()  # Changed to fetchone() instead of fetchall()
-        logging.info(f" executed SQL 1 is: {cursor._executed}")
+        cursor1.execute(mySql_select_query, record)
+        result = cursor1.fetchone()
+        cursor1.fetchall()  # Consume any remaining results
+        logging.info(f" executed SQL 1 is: {cursor1._executed}")
 
         if result:
             access_level = result[0]
         else:
-
+            # Second query - check USER_ACCOUNTS
+            cursor2 = connection.cursor()
             mySql_select_query = """SELECT ACCESS_LEVEL FROM USER_ACCOUNTS
                     WHERE USER_ID = %s AND CORPORATE_ACCOUNT = %s"""
             record = (user_id, corporate_account)
 
-            cursor.execute(mySql_select_query, record)
-            result = cursor.fetchone()  # Changed to fetchone() instead of fetchall()
-            logging.info(f" executed SQL 2 is: {cursor._executed}")
+            cursor2.execute(mySql_select_query, record)
+            result = cursor2.fetchone()
+            cursor2.fetchall()  # Consume any remaining results
+            logging.info(f" executed SQL 2 is: {cursor2._executed}")
 
             if result:
                 access_level = result[0]
-
             else:
                 sts = "Failed"
                 sts_description = "No matching access row found"
                 logging.info("check 1")
 
+        # Third query - check API access permissions
         if sts == 'Success' and api_name:
-
+            cursor3 = connection.cursor()
             mySql_select_query = f"""SELECT COUNT(*) FROM ACCOUNT_ACCESS_LEVELS A, API_ACCESS_LEVELS B
-            WHERE A.CATEGORY_ID = B.CATEGORY_ID AND LEVEL_{access_level} = TRUE AND API_NAME = %s"""
+            WHERE A.CATEGORY_ID = B.CATEGORY_ID AND LEVEL_{access_level} = TRUE AND API_NAME = %s
+            AND A.CORPORATE_ACCOUNT = %s"""
 
-            record = (api_name,)
+            record = (api_name, corporate_account)
 
-            cursor.execute(mySql_select_query, record)
-            result = cursor.fetchone()  # Changed to fetchone() instead of fetchall()
-            logging.info(f" executed SQL 3 is: {cursor._executed}")
+            cursor3.execute(mySql_select_query, record)
+            result = cursor3.fetchone()
+            cursor3.fetchall()  # Consume any remaining results
+            logging.info(f" executed SQL 3 is: {cursor3._executed}")
 
             if result:
                 if result[0] > 0:
                     access_status = True
                     sts_description = "Access level retrieved successfully"
-
 
     except mysql.connector.Error as error:
         sts = "Failed"
@@ -895,7 +901,9 @@ def get_user_api_access_level(user_id, corporate_account, project_id, api_name):
 
     finally:
         if connection.is_connected():
-            cursor.close()
+            cursor1.close()
+            cursor2.close()
+            cursor3.close()
             connection.close()
 
     return access_level, access_status, sts, sts_description
@@ -1045,7 +1053,7 @@ def get_level_hierarchy_path(cursor, corporate_account, project_id, level_id):
     return hierarchy_path
 
 
-def validate_functional_domain(functional_domain):
+def validate_functional_domain(corporate_account, functional_domain):
     connection2 = None
 
     try:
@@ -1054,9 +1062,9 @@ def validate_functional_domain(functional_domain):
                                               user=config.user,
                                               password=config.password)
         cursor2 = connection2.cursor()
-        mySql_select_query = "SELECT * FROM FUNCTIONAL_DOMAINS WHERE FUNCTIONAL_DOMAIN = %s"
+        mySql_select_query = "SELECT * FROM FUNCTIONAL_DOMAINS WHERE FUNCTIONAL_DOMAIN = %s AND CORPORATE_ACCOUNT = %s"
 
-        record = (functional_domain,)
+        record = (functional_domain, corporate_account)
         cursor2.execute(mySql_select_query, record)
         result = cursor2.fetchone()
 

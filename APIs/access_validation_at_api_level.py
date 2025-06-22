@@ -40,13 +40,7 @@ def validate_access(f):
                 api_name
             )
 
-            # response = requests.post(
-            #     'http://127.0.0.1:5000/api/get_user_api_access_level',
-            #     json=validation_data,
-            #     headers=request.headers
-            # )
-            #
-            # access_result = response.json()
+
 
             if not access_status:
                 # error_message = access_result.get('status_description', 'Access denied')
