@@ -12,7 +12,7 @@ def generate_next_sequence(corporate_account, project_id, sequence_key):
     sts = "Success"
     sts_description = "Next sequence number generated successfully"
     rows_impacted = 0
-    next_sequence_no = 1
+    next_sequence_no = 1000  # Default starting sequence number
     connection2 = None
 
     try:
