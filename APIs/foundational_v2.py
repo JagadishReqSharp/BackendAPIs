@@ -836,6 +836,9 @@ def get_user_api_access_level(user_id, corporate_account, project_id, api_name):
     access_status = False
 
     logging.info("Inside get user access level - data =  ${data}")
+    cursor1 = None
+    cursor2 = None
+    cursor3 = None
 
     try:
         connection = mysql.connector.connect(host=config.host,
@@ -901,9 +904,12 @@ def get_user_api_access_level(user_id, corporate_account, project_id, api_name):
 
     finally:
         if connection.is_connected():
-            cursor1.close()
-            cursor2.close()
-            cursor3.close()
+            for cursor in [cursor1, cursor2, cursor3]:
+                if cursor:
+                    try:
+                        cursor.close()
+                    except:
+                        pass
             connection.close()
 
     return access_level, access_status, sts, sts_description
