@@ -1049,6 +1049,11 @@ def update_user_project_access(current_user):
     access_level = data.get('access_level')
     business_team_id = data.get('business_team_id')
     user_role = data.get('user_role')
+    requesting_for_corporate_account = data.get('requesting_for_corporate_account')
+    # When Super Admin is logged in, they can see all users across other accounts
+    if requesting_for_corporate_account:
+        corporate_account = requesting_for_corporate_account
+
 
     if not validate_corporate_account(corporate_account):
         return jsonify({
@@ -1148,7 +1153,12 @@ def update_user_project_access(current_user):
 def delete_user_project_access(current_user):
     data = request.json
     corporate_account = data.get('corporate_account')
+    requesting_for_corporate_account = data.get('requesting_for_corporate_account')
     user_project_records = data.get('user_project_records', [])
+
+    if requesting_for_corporate_account:
+        corporate_account = requesting_for_corporate_account
+
 
     logging.info(f"Deleting project access - corporate_account: {corporate_account}")
     logging.info(f"Records to delete: {user_project_records}")
@@ -1246,6 +1256,11 @@ def get_user_project_list(current_user):
     corporate_account = data.get('corporate_account')
     user_ids = data.get('user_ids', [])
     project_id = data.get('project_id', None)
+    # When Super Admin is logged in, they can see all users across other accounts
+    requesting_for_corporate_account = data.get('requesting_for_corporate_account')
+    if requesting_for_corporate_account:
+        corporate_account = requesting_for_corporate_account
+
 
     logging.info(f"Getting user project list - corporate_account: {corporate_account}")
     logging.info(f"User IDs filter: {user_ids}, Project ID filter: {project_id}")

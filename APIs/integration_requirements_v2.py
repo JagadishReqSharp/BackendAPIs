@@ -444,6 +444,19 @@ def create_integration_system(current_user):
             'status_description': 'System name is required'
         })
 
+    if not system_description.strip():
+        return jsonify({
+            'status': 'Failed',
+            'status_description': 'System description is required'
+        })
+
+    if not system_acronym.strip():
+        return jsonify({
+            'status': 'Failed',
+            'status_description': 'System acronym is required'
+        })
+
+
     sts = "Success"
     sts_description = "Integration system added successfully"
     system_id = None
@@ -475,7 +488,7 @@ def create_integration_system(current_user):
     except mysql.connector.Error as error:
         sts = "Failed"
         if error.errno == 1062:  # Duplicate entry
-            sts_description = f"Attempt to create a duplicate entry"
+            sts_description = f"Attempt to create a duplicate entry. Please check the system name and acronym."
         elif error.errno == 1048:  # Column cannot be null
             sts_description = "Required field is missing. Please check all required fields are provided."
         elif error.errno == 1406:  # Data too long for column
